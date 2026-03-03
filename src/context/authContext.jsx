@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import { axiosInstance } from "./axios";
 
 // 1. Context Create karna
 const AuthContext = createContext();
@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   // 2. Refresh hone par check karna ki user logged in hai ya nahi
   const checkUser = async () => {
     try {
-      const res = await axios.get(
+      const res = await axiosInstance.get(
         "https://pdf-sign-app-backend.vercel.app/api/auth/profile",
         {
           withCredentials: true, // Cookies bhejni hain

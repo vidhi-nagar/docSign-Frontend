@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, loginSchema } from "../utils/validationSchema";
-import axios from "axios";
+import { axiosInstance } from "../context/axios";
 import toast from "react-hot-toast";
 import { Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +33,7 @@ const Auth = () => {
     const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
     console.log(data);
     try {
-      const res = await axios.post(
+      const res = await axiosInstance.post(
         `https://pdf-sign-app-backend.vercel.app${endpoint}`,
         data,
         {
