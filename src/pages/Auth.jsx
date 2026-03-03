@@ -33,9 +33,13 @@ const Auth = () => {
     const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
     console.log(data);
     try {
-      const res = await axios.post(`http://localhost:5000${endpoint}`, data, {
-        withCredentials: true, // Cookies ke liye zaroori
-      });
+      const res = await axios.post(
+        `https://pdf-sign-app-backend.vercel.app${endpoint}`,
+        data,
+        {
+          withCredentials: true, // Cookies ke liye zaroori
+        },
+      );
       toast.success(isLogin ? "Login Successful!" : "Account Created!");
 
       if (isLogin) {

@@ -11,9 +11,12 @@ export const AuthProvider = ({ children }) => {
   // 2. Refresh hone par check karna ki user logged in hai ya nahi
   const checkUser = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/auth/profile", {
-        withCredentials: true, // Cookies bhejni hain
-      });
+      const res = await axios.get(
+        "https://pdf-sign-app-backend.vercel.app/api/auth/profile",
+        {
+          withCredentials: true, // Cookies bhejni hain
+        },
+      );
       setUser(res.data.user); // Agar token sahi hai, toh user save ho jayega
     } catch (error) {
       setUser(null); // Agar error hai (token nahi hai), toh user empty rahega
