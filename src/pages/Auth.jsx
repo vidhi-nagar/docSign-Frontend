@@ -34,7 +34,7 @@ const Auth = () => {
     console.log(data);
     try {
       const res = await axiosInstance.post(
-        `https://pdf-sign-app-backend.vercel.app${endpoint}`,
+        `https://doc-sign-backend.vercel.app${endpoint}`,
         data,
         {
           withCredentials: true, // Cookies ke liye zaroori

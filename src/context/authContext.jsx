@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const checkUser = async () => {
     try {
       const res = await axiosInstance.get(
-        "https://pdf-sign-app-backend.vercel.app/api/auth/profile",
+        "https://doc-sign-backend.vercel.app/api/auth/profile",
         {
           withCredentials: true, // Cookies bhejni hain
         },
