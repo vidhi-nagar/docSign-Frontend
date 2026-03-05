@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signupSchema, loginSchema } from "../utils/validationSchema";
+import { signupSchema, loginSchema } from "../utils/validationSchema.js";
 import { axiosInstance } from "../context/axios";
 import toast from "react-hot-toast";
 import { Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
