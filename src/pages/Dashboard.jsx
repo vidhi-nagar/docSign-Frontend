@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { axiosInstance } from "../context/axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, Download, Mail, Loader2 } from "lucide-react";
+import { useAuth } from "../context/authContext.jsx";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [userDocs, setUserDocs] = useState([]); // State for documents
@@ -10,8 +12,14 @@ const Dashboard = () => {
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
-
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
+
+  // if (!user) {
+  //   toast.error("Please login first to upload and sign documents!");
+  //   navigate("/register");
+  // }
 
   const fetchDocs = async () => {
     try {
@@ -52,8 +60,13 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    if (!user) {
+      toast.error("Please login first to upload and sign documents!");
+      navigate("/register");
+    }
+
     fetchDocs();
-  }, [location.key]);
+  }, [location.key, user, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">

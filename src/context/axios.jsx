@@ -1,6 +1,6 @@
 import axios from "axios";
 
 export const axiosInstance = axios.create({
-  baseURL: "https://doc-sign-backend.vercel.app",
+  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:5000",
   withCredentials: true,
 });

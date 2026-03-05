@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/authContext.jsx"; // User ka data lene ke liye
 import { LogOut, FileText, Upload } from "lucide-react"; // Icons
 import { axiosInstance } from "../context/axios";
 import { Document, Page, pdfjs } from "react-pdf";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 // import { url } from "zod";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -23,6 +24,13 @@ const UploadPdf = () => {
   // Dashboard.jsx (Selected Changes)
   const handleUpload = async (e) => {
     e.preventDefault();
+
+    // if (!user) {
+    //   toast.error("Please login first to upload and sign documents!");
+    //   navigate("/register"); // Ya jo bhi aapka login route hai
+    //   return;
+    // }
+
     if (!file) return alert("Pehle file select karo!");
 
     const formData = new FormData();
@@ -112,6 +120,13 @@ const UploadPdf = () => {
     // window.open(pdfUrl, "_blank", "/editor");
     navigate("/editor", { state: { fileUrl: actualPath } });
   };
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("Please login first to upload and sign documents!");
+      navigate("/register");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50">

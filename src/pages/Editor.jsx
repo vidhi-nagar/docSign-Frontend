@@ -1,5 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useLocation, useParams, useNavigate } from "react-router-dom";
+import {
+  useLocation,
+  useParams,
+  useNavigate,
+  Navigate,
+} from "react-router-dom";
 import SignatureCanvas from "react-signature-canvas";
 import { Document, Page, pdfjs } from "react-pdf";
 import Draggable from "react-draggable";
@@ -8,6 +13,7 @@ import { PDFDocument } from "pdf-lib";
 import { axiosInstance } from "../context/axios";
 import { useAuth } from "../context/authContext";
 import { CheckCircle } from "lucide-react";
+import toast from "react-hot-toast";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -29,9 +35,6 @@ export const Editor = ({ externalFileUrl, externalDocId, isExternal }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [numPages, setNumPages] = useState(0);
 
-  // const currentFileId = isExternal ? externalDocId : id;
-  // const editorFileUrl = isExternal ? externalFileUrl : location.state?.fileUrl;
-
   const [sigData, setSigData] = useState({
     pageIndex: null,
     x: 50,
@@ -39,19 +42,25 @@ export const Editor = ({ externalFileUrl, externalDocId, isExternal }) => {
     width: 150,
     height: 70,
   });
+
   if (!fileUrl) {
     console.log("Note: fileUrl is not available yet", fileUrl);
   }
 
-  // Debugging ke liye useEffect: Taaki pata chale screen load hote hi data mila ya nahi
+  //  useEffect for Debugging
   useEffect(() => {
+    if (!user) {
+      toast.error("Please login first to upload and sign documents!");
+      navigate("/register");
+    }
+
     console.log("Editor Mounted. File ID (from URL):", urlId);
     if (!fileUrl) {
       console.log("Note: fileUrl is not available yet");
     } else {
       console.log("Editor Mounted , fileUrl:", fileUrl);
     }
-  }, [urlId, fileUrl]);
+  }, [urlId, fileUrl, user, navigate]);
 
   const handleSaveSignature = () => {
     if (sigCanvas.current.isEmpty()) return alert("Pehle sign kijiye!");
@@ -124,17 +133,10 @@ export const Editor = ({ externalFileUrl, externalDocId, isExternal }) => {
   };
 
   const handleFinish = async () => {
-    // const currentFileId = id;
-    // const currentSignerId = user?._id || user?.id;
-
     const currentFileId = isExternal ? externalDocId : urlId;
     const currentSignerId = isExternal
       ? "EXTERNAL_USER"
       : user?._id || user?.id;
-
-    // const currentSignerId = isExternal
-    //   ? "EXTERNAL_USER"
-    //   : user?._id || user?.id;
 
     // Validation
     if (!currentFileId || currentFileId === "undefined") {
@@ -196,168 +198,6 @@ export const Editor = ({ externalFileUrl, externalDocId, isExternal }) => {
       );
     }
   };
-
-  // const handleFinish = async () => {
-  //   // 1. URL Parameter (id) ko priority dena
-  //   const currentFileId = id;
-  //   const currentSignerId = user?._id || user?.id;
-
-  //   // 2. Strict Check (Agar ID nahi hai toh aage mat badho)
-  //   if (!currentFileId || currentFileId === "undefined") {
-  //     return alert("Error: File ID missing hai! Dashboard se restart karein.");
-  //   }
-  //   if (!currentSignerId) {
-  //     return alert("Error: Aap logged in nahi hain!");
-  //   }
-  //   if (!sign || sigData.pageIndex === null) {
-  //     return alert("Pehle signature ko PDF par set karein!");
-  //   }
-
-  //   try {
-  //     // 3. Pehle Download (UX ke liye achha hai)
-  //     const isDownloaded = await generateSignedPDF();
-  //     if (!isDownloaded) return;
-
-  //     // 4. DB Payload
-  //     const payload = {
-  //       fileId: currentFileId, // URL wali ID bhej rahe hain
-  //       x: Math.round(sigData.x),
-  //       y: Math.round(sigData.y),
-  //       signer: currentSignerId,
-  //       status: "signed",
-  //     };
-
-  //     console.log("Sending to Backend:", payload);
-  //     const response = await axiosInstance.post("/api/signature-save", payload);
-
-  //     if (response.status === 201 || response.status === 200) {
-  //       alert("Mubarak ho! PDF save aur download dono ho gayi.");
-  //     }
-  //   } catch (error) {
-  //     console.error("DB Save Error:", error.response?.data || error.message);
-  //     alert(
-  //       "PDF download ho gayi par DB entry fail hui: " +
-  //         (error.response?.data?.message || "Server Error"),
-  //     );
-  //   }
-  // };
-  // pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
-  // export const Editor = () => {
-  //   const { id } = useParams(); // URL se File ID (fileId) mil rahi hai
-  //   const location = useLocation();
-  //   const fileUrl = location.state?.fileUrl;
-  //   const { user } = useAuth();
-
-  //   const draggableNodeRef = useRef(null);
-  //   const sigCanvas = useRef(null);
-
-  //   const [sign, setSign] = useState(null);
-  //   const [isModalOpen, setIsModalOpen] = useState(false);
-  //   const [numPages, setNumPages] = useState(0);
-
-  //   const [sigData, setSigData] = useState({
-  //     pageIndex: null,
-  //     x: 50,
-  //     y: 50,
-  //     width: 150,
-  //     height: 70,
-  //   });
-
-  //   const handleSaveSignature = () => {
-  //     if (sigCanvas.current.isEmpty()) return alert("Pehle sign kijiye!");
-  //     const dataUrl = sigCanvas.current.getSignaturePad().toDataURL("image/png");
-  //     setSign(dataUrl);
-  //     setIsModalOpen(false);
-  //     setSigData((prev) => ({ ...prev, pageIndex: null }));
-  //   };
-
-  //   const generateSignedPDF = async () => {
-  //     try {
-  //       if (!fileUrl || !sign) return alert("Zaroori data missing hai!");
-
-  //       const existingPdfBytes = await fetch(fileUrl).then((res) =>
-  //         res.arrayBuffer(),
-  //       );
-  //       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-  //       const pages = pdfDoc.getPages();
-  //       const targetPage = pages[sigData.pageIndex];
-  //       const { width: pageWidth, height: pageHeight } = targetPage.getSize();
-
-  //       const signatureImage = await pdfDoc.embedPng(sign);
-
-  //       // Canvas Scaling
-  //       const canvasContainers = document.querySelectorAll(".pdf-page-container");
-  //       const currentCanvas =
-  //         canvasContainers[sigData.pageIndex].querySelector("canvas");
-  //       const canvasWidth = currentCanvas.clientWidth;
-  //       const canvasHeight = currentCanvas.clientHeight;
-
-  //       const scaleX = pageWidth / canvasWidth;
-  //       const scaleY = pageHeight / canvasHeight;
-
-  //       const finalX = sigData.x * scaleX;
-  //       const finalY = pageHeight - sigData.y * scaleY - sigData.height * scaleY;
-
-  //       targetPage.drawImage(signatureImage, {
-  //         x: finalX,
-  //         y: finalY,
-  //         width: sigData.width * scaleX,
-  //         height: sigData.height * scaleY,
-  //       });
-
-  //       const pdfBytes = await pdfDoc.save();
-  //       const blob = new Blob([pdfBytes], { type: "application/pdf" });
-  //       const url = URL.createObjectURL(blob);
-
-  //       const link = document.createElement("a");
-  //       link.href = url;
-  //       link.download = `Signed_Doc_${Date.now()}.pdf`;
-  //       link.click();
-  //       return true;
-  //     } catch (err) {
-  //       console.error("PDF Logic Error:", err);
-  //       return false;
-  //     }
-  //   };
-
-  //   const handleFinish = async () => {
-  //     const currentSignerId = user?._id || user?.id;
-  //     const currentFileId = id; // useParams wala ID use karein
-
-  //     // Validation
-  //     if (!currentFileId || !currentSignerId) {
-  //       return alert("Error: User ya File ki ID nahi mili. Login check karein!");
-  //     }
-  //     if (!sign || sigData.pageIndex === null) {
-  //       return alert("Pehle signature ko PDF par set karein!");
-  //     }
-
-  //     try {
-  //       // 1. Download logic
-  //       const success = await generateSignedPDF();
-  //       if (!success) return;
-
-  //       // 2. DB Payload (Aapke exact format mein)
-  //       const payload = {
-  //         fileId: currentFileId,
-  //         x: Math.round(sigData.x),
-  //         y: Math.round(sigData.y),
-  //         signer: currentSignerId,
-  //         status: "signed",
-  //       };
-
-  //       console.log("Saving to DB...", payload);
-  //       const response = await axiosInstance.post("/api/signature-save", payload);
-
-  //       if (response.status === 201 || response.status === 200) {
-  //         alert("Mubarak ho! PDF download ho gayi aur DB mein entry ho gayi.");
-  //       }
-  //     } catch (error) {
-  //       console.error("DB Error:", error.response?.data || error.message);
-  //       alert("DB Error: " + (error.response?.data?.message || "Server issue"));
-  //     }
-  //   };
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden font-sans">

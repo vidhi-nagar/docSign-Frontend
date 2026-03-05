@@ -18,7 +18,9 @@ const Auth = () => {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
+    // formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(isLogin ? loginSchema : signupSchema),
   });
@@ -34,24 +36,120 @@ const Auth = () => {
     console.log(data);
     try {
       const res = await axiosInstance.post(
-        `https://doc-sign-backend.vercel.app${endpoint}`,
+        `${import.meta.env.VITE_BACKEND_URL}${endpoint}`,
         data,
         {
           withCredentials: true, // Cookies ke liye zaroori
         },
       );
-      toast.success(isLogin ? "Login Successful!" : "Account Created!");
 
-      if (isLogin) {
-        setUser(res.data.user);
-        // Yahan hum redirect karenge Dashboard par (Day 5 mein)
-        console.log("Token:", res.data.token);
-        navigate("/upload");
-      } else {
-        setIsLogin(true); // Signup ke baad login par bhej do
+      if (isLogin && (!res.data.token || res.data.token === "undefined")) {
+        // Yahan manual error set karein taaki UI update ho
+        setError("password", {
+          type: "manual",
+          message: "Invalid  password",
+        });
+        setError("email", {
+          type: "manual",
+          message: "Check your credentials",
+        });
+        toast.error("Login failed. Please check your details.");
+        return;
       }
+
+      // Success Case
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data.user);
+      toast.success(isLogin ? "Login Successful!" : "Account Created!");
+      navigate("/upload");
+
+      // const token = res.data.token;
+
+      // if (isLogin) {
+      //   localStorage.setItem("token", token);
+      //   setUser(res.data.user);
+      //   //   // Yahan hum redirect karenge Dashboard par (Day 5 mein)
+      //   console.log("Token:", res.data.token);
+      //   if (!token || token === "undefined") {
+      //     toast.error("Invalid login session. Please try again.");
+      //     return;
+      //   }
+      //   toast.success(isLogin ? "Login Successful!" : "Account Created!");
+      //   navigate("/upload");
+      // } else {
+      //   toast.success("Account Created! Please login.");
+      //   setIsLogin(true); // Signup ke baad login par bhej do
+      // }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Kuch galat hua!");
+      const errorMsg = error.response?.data?.message || "Login failed!";
+      const lowerMsg = errorMsg.toLowerCase();
+
+      // 1. Agar Backend kahe ki email nahi mili ya user exist nahi karta
+      if (
+        lowerMsg.includes("email") ||
+        lowerMsg.includes("user") ||
+        lowerMsg.includes("exist")
+      ) {
+        setError("email", {
+          type: "manual",
+          message: "Ye email registered nahi hai!",
+        });
+      }
+
+      // 2. Agar Backend kahe ki password galat hai
+      else if (
+        lowerMsg.includes("password") ||
+        lowerMsg.includes("credential")
+      ) {
+        setError("password", {
+          type: "manual",
+          message: "Password sahi nahi hai!",
+        });
+      }
+
+      // 3. Agar koi general error hai toh dono ko highlight kar sakte hain
+      else {
+        setError("email", { type: "manual", message: "Invalid credentials" });
+        setError("password", {
+          type: "manual",
+          message: "Invalid credentials",
+        });
+      }
+
+      // const errorMsg = error.response?.data?.message || "Login failed!";
+      // const lowerMsg = errorMsg.toLowerCase();
+
+      // if (isLogin) {
+      //   // Agar message mein 'email' ya 'user' word hai, toh email field par error dikhao
+      //   if (
+      //     lowerMsg.includes("email") ||
+      //     lowerMsg.includes("user") ||
+      //     lowerMsg.includes("exist")
+      //   ) {
+      //     setError("email", {
+      //       type: "manual",
+      //       message: errorMsg,
+      //     });
+      //   }
+      //   // Agar 'password' ya 'credential' ya 'session' word hai, toh password par dikhao
+      //   else if (
+      //     lowerMsg.includes("password") ||
+      //     lowerMsg.includes("credential") ||
+      //     lowerMsg.includes("session")
+      //   ) {
+      //     setError("password", {
+      //       type: "manual",
+      //       message: errorMsg,
+      //     });
+      //   }
+      //   // Default: Agar kuch samajh na aaye toh password par dikha do
+      //   else {
+      //     setError("password", { type: "manual", message: errorMsg });
+      //   }
+      // }
+
+      // toast.error(errorMsg);
+      console.error("Auth Error:", error);
     }
   };
 
@@ -68,11 +166,15 @@ const Auth = () => {
           </h2>
           <p className="text-center text-gray-500 mb-8 text-sm">
             {isLogin
-              ? "Apne account mein login karein"
-              : "Naya account banayein aur sign karna shuru karein"}
+              ? "Login to your account"
+              : "Create a new account and start signing in"}
           </p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-5"
+            noValidate
+          >
             <AnimatePresence mode="wait">
               {!isLogin && (
                 <motion.div
@@ -88,7 +190,7 @@ const Auth = () => {
                     <input
                       {...register("name")}
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                      placeholder="Gaurav Kumar"
+                      placeholder="name"
                     />
                   </div>
                   {errors.name && (
@@ -128,7 +230,11 @@ const Auth = () => {
                 <input
                   type="password"
                   {...register("password")}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                    errors.password
+                      ? "border-red-500 ring-2 ring-red-200 bg-red-50" // Error hone par red border
+                      : "border-gray-300 focus:ring-2 focus:ring-blue-500"
+                  }`}
                   placeholder="••••••••"
                 />
               </div>
@@ -161,8 +267,8 @@ const Auth = () => {
               className="text-blue-600 font-medium hover:underline transition-all"
             >
               {isLogin
-                ? "Account nahi hai? Register karein"
-                : "Pehle se account hai? Login karein"}
+                ? "Don't have an Account? Register here"
+                : "Already have an Account? Login here"}
             </button>
           </div>
         </div>
