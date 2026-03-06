@@ -41,7 +41,7 @@ const Dashboard = () => {
       setSendingEmail(true);
       const response = await axiosInstance.post("api/docs/send-email-invite", {
         recipientEmail: email,
-        documentId,
+        documentId: documentId,
       });
 
       if (response.data.success) {
