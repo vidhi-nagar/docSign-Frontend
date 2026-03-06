@@ -33,7 +33,7 @@ function App() {
           }
         />
         <Route path="/upload" element={<Upload />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         <Route path="/editor/:id" element={<Editor />} />
         <Route path="/sign-external/:token" element={<ExternalSignEditor />} />
       </Routes>
