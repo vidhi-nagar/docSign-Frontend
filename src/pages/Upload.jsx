@@ -37,8 +37,13 @@ const UploadPdf = () => {
     formData.append("pdf", file);
 
     try {
+      const token = localStorage.getItem("token");
+      console.log(token);
       const response = await axiosInstance.post("/api/docs/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (response.data.success) {
@@ -67,6 +72,9 @@ const UploadPdf = () => {
       }
     } catch (error) {
       console.error("Upload fail:", error);
+      const errorMsg = error.response?.data?.message || "Upload fail ho gaya";
+      toast.error(errorMsg);
+      console.error("FULL ERROR DETAILS:", error.response?.data);
     }
   };
   // const handleUpload = async (e) => {
@@ -122,6 +130,11 @@ const UploadPdf = () => {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/register"); // Redirect to login immediately
+    }
+
     if (!user) {
       toast.error("Please login first to upload and sign documents!");
       navigate("/register");

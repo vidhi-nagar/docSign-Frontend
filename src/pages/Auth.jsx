@@ -53,33 +53,38 @@ const Auth = () => {
           type: "manual",
           message: "Check your credentials",
         });
+        console.log("Token:", res.data.token);
         toast.error("Login failed. Please check your details.");
         return;
       }
 
-      // Success Case
-      localStorage.setItem("token", res.data.token);
-      setUser(res.data.user);
-      toast.success(isLogin ? "Login Successful!" : "Account Created!");
-      navigate("/upload");
+      if (res.data.success) {
+        if (isLogin) {
+          const token = res.data.token;
 
-      // const token = res.data.token;
+          // Token check
+          if (!token || token === "undefined") {
+            toast.error("Invalid login session. Please try again.");
+            return;
+          }
+          console.log("Token:", res.data.token);
+          // 1. Token ko localStorage mein save karein
+          localStorage.setItem("token", token);
 
-      // if (isLogin) {
-      //   localStorage.setItem("token", token);
-      //   setUser(res.data.user);
-      //   //   // Yahan hum redirect karenge Dashboard par (Day 5 mein)
-      //   console.log("Token:", res.data.token);
-      //   if (!token || token === "undefined") {
-      //     toast.error("Invalid login session. Please try again.");
-      //     return;
-      //   }
-      //   toast.success(isLogin ? "Login Successful!" : "Account Created!");
-      //   navigate("/upload");
-      // } else {
-      //   toast.success("Account Created! Please login.");
-      //   setIsLogin(true); // Signup ke baad login par bhej do
-      // }
+          // 2. AuthContext mein user data set karein
+          setUser(res.data.user);
+
+          toast.success("Login Successful!");
+
+          // 3. User ko redirect karein
+          navigate("/upload");
+        } else {
+          // Agar user register kar raha hai
+          toast.success("Account Created! Please login.");
+          setIsLogin(true); // Signup ke baad Login form par switch karein
+          reset();
+        }
+      }
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Login failed!";
       const lowerMsg = errorMsg.toLowerCase();

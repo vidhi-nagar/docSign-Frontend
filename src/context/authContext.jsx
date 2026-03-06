@@ -10,18 +10,29 @@ export const AuthProvider = ({ children }) => {
 
   // 2. Refresh hone par check karna ki user logged in hai ya nahi
   const checkUser = async () => {
-    try {
-      const res = await axiosInstance.get(
-        import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173",
-        {
-          withCredentials: true, // Cookies bhejni hain
-        },
-      );
-      setUser(res.data.user); // Agar token sahi hai, toh user save ho jayega
-    } catch (error) {
-      setUser(null); // Agar error hai (token nahi hai), toh user empty rahega
-    } finally {
-      setLoading(false); // Check khatam ho gaya
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const res = await axiosInstance.get(
+          import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173",
+          {
+            withCredentials: true, // Cookies bhejni hain
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
+        if (res.data.success) {
+          setUser(res.data.user);
+        } else {
+          localStorage.removeItem("token"); // Agar token expire ho gaya ho
+        }
+        // setUser(res.data.user); // Agar token sahi hai, toh user save ho jayega
+      } catch (error) {
+        setUser(null); // Agar error hai (token nahi hai), toh user empty rahega
+      } finally {
+        setLoading(false); // Check khatam ho gaya
+      }
     }
   };
 
